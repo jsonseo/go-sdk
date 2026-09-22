@@ -148,7 +148,9 @@ func TestRetryAfterIsHonoured(t *testing.T) {
 		t.Fatalf("запрос не прошёл: %v", err)
 	}
 
-	if elapsed := time.Since(started); elapsed < time.Second {
+	// Допуск на зернистость таймера: на Windows сон отмеряется
+	// с точностью до миллисекунд в меньшую сторону.
+	if elapsed := time.Since(started); elapsed < 950*time.Millisecond {
 		t.Fatalf("пауза короче названного срока: %v", elapsed)
 	}
 

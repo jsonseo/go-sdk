@@ -7,7 +7,9 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    name: Go ${{ matrix.go }} / ${{ matrix.os }}
+
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
@@ -15,8 +17,16 @@ jobs:
         # 1.21 — нижняя граница: с неё доступны дженерики в том виде,
         # в каком их использует SDK.
         go: ['1.21', '1.22', '1.23', '1.24', '1.25', '1.26', '1.27']
-
-    name: Go ${{ matrix.go }}
+        os: [ubuntu-latest]
+        # Крайние версии гоняем ещё и на других системах: тесты транспорта
+        # работают с сокетами напрямую, а там поведение своё.
+        include:
+          - go: '1.21'
+            os: windows-latest
+          - go: '1.27'
+            os: windows-latest
+          - go: '1.27'
+            os: macos-latest
 
     steps:
       - uses: actions/checkout@v7
@@ -30,9 +40,45 @@ jobs:
       - run: go test -race ./...
 
       - name: Форматирование
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
         run: |
           unformatted=$(gofmt -l .)
           if [ -n "$unformatted" ]; then
             echo "не отформатировано: $unformatted"
             exit 1
           fi
+
+  cross:
+    name: Сборка под ${{ matrix.target }}
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - linux/amd64
+          - linux/arm64
+          - linux/386
+          - darwin/amd64
+          - darwin/arm64
+          - windows/amd64
+          - windows/386
+          - freebsd/amd64
+          - js/wasm
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27'
+
+      # Тесты гоняются не везде, а собираться SDK обязан всюду: он не
+      # трогает ничего, кроме стандартной библиотеки.
+      - name: Сборка
+        run: |
+          GOOS=${{ matrix.target }}
+          go env -w GOOS=${GOOS%/*} GOARCH=${GOOS#*/}
+          go build ./...
