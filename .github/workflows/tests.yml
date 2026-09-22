@@ -1,0 +1,38 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 1.21 — нижняя граница: с неё доступны дженерики в том виде,
+        # в каком их использует SDK.
+        go: ['1.21', '1.22', '1.23', '1.24', '1.25']
+
+    name: Go ${{ matrix.go }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+
+      - run: go vet ./...
+
+      - run: go test -race ./...
+
+      - name: Форматирование
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "не отформатировано: $unformatted"
+            exit 1
+          fi
