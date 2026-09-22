@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-	client, err := jsonseo.New("ВАШ_КЛЮЧ")
+	client, err := jsonseo.New("YOUR_KEY")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -448,7 +448,7 @@ case err != nil:
 # Настройки клиента
 
 ```go
-client, err := jsonseo.New("ВАШ_КЛЮЧ",
+client, err := jsonseo.New("YOUR_KEY",
 	jsonseo.WithBaseURL("https://jsonseo.ru/api"),   // адрес API
 	jsonseo.WithTimeout(5*time.Minute),              // сколько ждать ответа на попытку
 	jsonseo.WithAttempts(3),                         // всего попыток, вместе с первой

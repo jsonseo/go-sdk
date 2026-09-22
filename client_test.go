@@ -134,6 +134,36 @@ func TestNewRequiresAPIKey(t *testing.T) {
 	}
 }
 
+// Иначе заголовок не соберётся, и сервис ответит «токен не предоставлен».
+func TestNewRejectsKeyWithNonASCII(t *testing.T) {
+	// Второй набор — края строки: там родной trim каждого языка свой, и без
+	// общего набора обрезки эти ключи расходились бы по SDK.
+	edges := []string{"\u00a0KEY", "\u2000KEY", "\u0085KEY", "KEY\x00", "\x0cKEY", "\x1cKEY", "KEY\x0b"}
+
+	for _, key := range append([]string{"КЛЮЧ", "dead\tbeef", "dead\x01beef", "ключdeadbeef"}, edges...) {
+		if _, err := New(key); !errors.Is(err, ErrInvalidArgument) {
+			t.Fatalf("ключ %q должен отвергаться, получено %v", key, err)
+		}
+	}
+}
+
+func TestTrimsTheKeyInsteadOfRejectingIt(t *testing.T) {
+	r := newRecorder(t).push(200, `{}`)
+
+	client, err := New("  Ab3-_.~xYz09 \n", WithBaseURL(r.server.URL+"/api"))
+	if err != nil {
+		t.Fatalf("клиент не создался: %v", err)
+	}
+
+	if _, err := client.Balance(context.Background()); err != nil {
+		t.Fatalf("запрос не прошёл: %v", err)
+	}
+
+	if got := r.took()[0].headers.Get("Authorization"); got != "Bearer Ab3-_.~xYz09" {
+		t.Fatalf("ключ обрезан неверно: %q", got)
+	}
+}
+
 func TestNewRejectsMeaninglessAttempts(t *testing.T) {
 	for _, attempts := range []int{0, -5} {
 		if _, err := New("KEY", WithAttempts(attempts)); !errors.Is(err, ErrInvalidArgument) {

@@ -2,7 +2,7 @@
 // Google и Bing, картинки и видео, подсказки, Вордстат, прогноз Директа и
 // геолокация по IP.
 //
-//	client, err := jsonseo.New("ВАШ_КЛЮЧ")
+//	client, err := jsonseo.New("YOUR_KEY")
 //	serp, err := client.Yandex(ctx, "купить ноутбук", jsonseo.Params{"region": 213})
 package jsonseo
 
@@ -21,7 +21,7 @@ import (
 )
 
 // Version — версия SDK, уезжает в User-Agent.
-const Version = "1.0.0"
+const Version = "1.0.1"
 
 // DefaultBaseURL — адрес API по умолчанию.
 const DefaultBaseURL = "https://jsonseo.ru/api"
@@ -147,12 +147,28 @@ func WithHTTPClient(client *http.Client) Option {
 
 // New создаёт клиент. Ключ берётся в личном кабинете на jsonseo.ru.
 func New(apiKey string, opts ...Option) (*Client, error) {
-	if strings.TrimSpace(apiKey) == "" {
+	// Обрезаем ровно тот же набор, что и остальные SDK: родной trim в
+	// каждом языке свой, и один ключ принимался бы по-разному.
+	key := strings.Trim(apiKey, " \t\n\r")
+
+	if key == "" {
 		return nil, fmt.Errorf("%w: нужен API-ключ, возьмите его на https://jsonseo.ru", ErrInvalidArgument)
 	}
 
+	// Заголовок Authorization не переносит не-ASCII и управляющие символы:
+	// с таким ключом он не соберётся, и сервис ответит «токен не
+	// предоставлен» вместо внятной ошибки.
+	for _, r := range key {
+		if r < ' ' || r > '~' {
+			return nil, fmt.Errorf(
+				"%w: API-ключ содержит символы вне ASCII, проверьте, что он скопирован целиком",
+				ErrInvalidArgument,
+			)
+		}
+	}
+
 	client := &Client{
-		apiKey:        strings.TrimSpace(apiKey),
+		apiKey:        key,
 		baseURL:       DefaultBaseURL,
 		timeout:       5 * time.Minute,
 		attempts:      3,
