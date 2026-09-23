@@ -21,7 +21,7 @@ import (
 )
 
 // Version — версия SDK, уезжает в User-Agent.
-const Version = "1.0.1"
+const Version = "1.0.2"
 
 // DefaultBaseURL — адрес API по умолчанию.
 const DefaultBaseURL = "https://jsonseo.ru/api"
