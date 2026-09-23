@@ -23,6 +23,22 @@ func TestResponseShapes(t *testing.T) {
 		}
 	})
 
+	t.Run("фраза, которую Вордстат не принял", func(t *testing.T) {
+		r := newRecorder(t).push(200, `{"text":"купить [ёлку","region":"213","device":"desktop",
+			"results":{"totalValue":0},
+			"error":"Вордстат не принял фразу: ошибка в синтаксисе операторов. Запрос оплачен."}`)
+
+		got, err := r.client(t).WordstatFrequency(ctx, "купить [ёлку")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Без поля ноль выглядел бы настоящей частотностью.
+		if got.Error == "" || got.Results.TotalValue != 0 {
+			t.Fatalf("объяснение потеряно: %+v", got)
+		}
+	})
+
 	t.Run("регионы Яндекса", func(t *testing.T) {
 		r := newRecorder(t).push(200, `{"name":"Казань","lang":"ru","regions":[
 			{"id":43,"name":"Казань","subname":"Республика Татарстан","lat":55.79,"lon":49.1}]}`)

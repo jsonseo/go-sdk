@@ -204,6 +204,10 @@ type WordstatResponse struct {
 		// Associations — соседняя семантика.
 		Associations []WordstatPhrase `json:"associations"`
 	} `json:"results"`
+	// Error — почему данных нет: Вордстат не принял фразу из-за синтаксиса
+	// операторов. Ответ при этом удачный и оплаченный, а результаты пустые.
+	// У обычного ответа поле пустое.
+	Error string `json:"error,omitempty"`
 }
 
 // WordstatFrequencyResponse — частота запроса одним числом.
@@ -214,6 +218,10 @@ type WordstatFrequencyResponse struct {
 	Results struct {
 		TotalValue int `json:"totalValue"`
 	} `json:"results"`
+	// Error — почему данных нет: Вордстат не принял фразу из-за синтаксиса
+	// операторов. Ответ при этом удачный и оплаченный, а результаты пустые.
+	// У обычного ответа поле пустое.
+	Error string `json:"error,omitempty"`
 }
 
 // WordstatGraphPoint — точка динамики показов.
@@ -235,6 +243,10 @@ type WordstatGraphResponse struct {
 	Results struct {
 		Graph []WordstatGraphPoint `json:"graph"`
 	} `json:"results"`
+	// Error — почему данных нет: Вордстат не принял фразу из-за синтаксиса
+	// операторов. Ответ при этом удачный и оплаченный, а результаты пустые.
+	// У обычного ответа поле пустое.
+	Error string `json:"error,omitempty"`
 }
 
 // WordstatMapRow — строка географии показов.
@@ -258,6 +270,10 @@ type WordstatMapResponse struct {
 	Results struct {
 		Rows []WordstatMapRow `json:"rows"`
 	} `json:"results"`
+	// Error — почему данных нет: Вордстат не принял фразу из-за синтаксиса
+	// операторов. Ответ при этом удачный и оплаченный, а результаты пустые.
+	// У обычного ответа поле пустое.
+	Error string `json:"error,omitempty"`
 }
 
 // DirectPosition — прогноз по одному месту аукциона.
